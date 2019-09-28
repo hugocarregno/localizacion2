@@ -18,59 +18,48 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class MainActivity extends AppCompatActivity {
 
-
-    LocationManager manager;
-    ListenerPosicion listener;
+    private TextView latitud, longitud;
+    private LocationManager manager;
+    private ListenerPosicion listener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (validaPermisos()) {
-            manager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        validaPermisos();
+        configView();
+    }
 
-            listener = new ListenerPosicion();
-            long tiempo = 5000;
-            float distancia = 10;
-
-
-            //manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, tiempo, distancia, listener);
-            String codigo = "com.example.localizacion2.PICHICHU";
-            Intent intent = new Intent(codigo);
-            PendingIntent pi = PendingIntent.getBroadcast(this, -1, intent, 0);
-            //double latitud = -33.1501297;
-            double latitud = -33.67327862;
-            //double longitud = -66.308107700206;
-            double longitud = -65.44101707;
-            float radio = 500f;
-            long caducidad = -1;
-            IntentFilter filtro = new IntentFilter(codigo);
-            registerReceiver(new ReceptorProximidad(), filtro);
-            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    Activity#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for Activity#requestPermissions for more details.
-                return;
-            }
-
-            manager.addProximityAlert(latitud, longitud, radio, caducidad, pi);
-
+    private void configView() {
+        latitud = findViewById(R.id.latitud);
+        longitud = findViewById(R.id.longitud);
+        manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        listener = new ListenerPosicion();
+        long tiempo = 5000;
+        float distancia = 10;
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    Activity#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for Activity#requestPermissions for more details.
+            return;
         }
+        manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, tiempo, distancia, listener);
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         manager.removeUpdates(listener);
     }
 
@@ -146,7 +135,8 @@ public class MainActivity extends AppCompatActivity {
 
     class ListenerPosicion implements LocationListener{
         public void onLocationChanged(Location location){
-            Toast.makeText(getApplicationContext(), "Lat: "+location.getLatitude() + "Long: "+location.getLongitude(), Toast.LENGTH_LONG).show();
+            longitud.setText(location.getLongitude()+"");
+            latitud.setText(location.getLatitude()+"");
         }
         public void onProviderDisabled(String provider){
             Toast.makeText(getApplicationContext(), "El proveedor ha sido desconectado", Toast.LENGTH_LONG).show();
